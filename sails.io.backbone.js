@@ -264,8 +264,10 @@
 
 		// Send a simulated HTTP request to Sails via Socket.io
 		var simulatedXHR = 
-			socket.request(url, params, function serverResponded () {
-				var isSuccess = status >= 200 && status < 300 || status === 304;
+			socket.request(url, params, function serverResponded (body, response) {
+				var isSuccess = response.statusCode >= 200
+					&& response.statusCode < 300
+					|| response.statusCode === 304;
 				
 				if (isSuccess) {
 					(options.success || function(){}).apply(this, arguments);
