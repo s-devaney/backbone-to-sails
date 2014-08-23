@@ -238,72 +238,21 @@
 
 
         // Send a simulated HTTP request to Sails via Socket.io
+        var deferred = new $.Deferred();
+
         var simulatedXHR =
                 socket.request(url, params, function serverResponded(body, response) {
                     var isSuccess = response.statusCode >= 200
                         && response.statusCode < 300
                         || response.statusCode === 304;
 
-                    if (isSuccess) {
-                        (options.success || function () {
-                        }).apply(this, arguments);
-                    } else {
-                        (options.error || function () {
-                        }).apply(this, arguments);
-                    }
-
-                    (options.complete || function () {
-                    }).apply(this, arguments);
+                    deferred[isSuccess ? 'rejectWith' : 'resolveWith'](this, arguments);
                 }, verb);
 
 
-        // Trigget the `request` event on the Backbone model
-        model.trigger('request', model, simulatedXHR, options);
+        model.trigger('request', model, deferred, options);
 
-
-        return simulatedXHR;
+        return deferred;
     };
-
-
-    /**
-     * TODO:
-     * Replace sails.io.js with `jQuery-to-sails.js`, which can be a prerequisite of
-     * this SDK.
-     *
-     * Will allow for better client-side error handling, proper simulation of $.ajax,
-     * easier client-side support of headers, and overall a better experience.
-     */
-    /*
-     var simulatedXHR = $.Deferred();
-
-
-
-     // Send a simulated HTTP request to Sails via Socket.io
-     io.emit(verb, params, function serverResponded (err, response) {
-     if (err) {
-     if (options.error) options.error(err);
-     simulatedXHR.reject();
-     return;
-     }
-
-     if (options.success) options.success(response);
-     simulatedXHR.resolve();
-     });
-
-
-
-     var promise = simulatedXHR.promise();
-
-
-
-     // Trigger the model's `request` event
-     model.trigger('request', model, promise, options);
-
-
-
-     // Return a promise to allow chaining of sync methods.
-     return promise;
-     */
-
 
 })();
