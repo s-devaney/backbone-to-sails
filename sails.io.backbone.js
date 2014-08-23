@@ -236,21 +236,31 @@
                 verb = method;
         }
 
+        promise = this.makeSailsRequest(url, verb, params);
+        model.trigger('request', model, promise, options);
 
+        return promise;
+    };
+
+    /**
+     * #Backbone.makeSailsRequest
+     *
+     * Runs an HTTPish request over the sails socket.
+     *
+     * @param {string} url
+     * @param {string} verb
+     * @param {{}=} data
+     * @returns {$.Deferred}
+     */
+    Backbone.makeSailsRequest = function (url, verb, data) {
         // Send a simulated HTTP request to Sails via Socket.io
         var deferred = new $.Deferred();
 
-        var simulatedXHR =
-                socket.request(url, params, function serverResponded(body, response) {
-                    var isSuccess = response.statusCode >= 200
-                        && response.statusCode < 300
-                        || response.statusCode === 304;
+        socket.request(url, data || {}, function serverResponded(body, response) {
+            var isSuccess = response.statusCode >= 200 && response.statusCode < 300 || response.statusCode === 304;
 
-                    deferred[isSuccess ? 'rejectWith' : 'resolveWith'](this, arguments);
-                }, verb);
-
-
-        model.trigger('request', model, deferred, options);
+            deferred[isSuccess ? 'rejectWith' : 'resolveWith'](this, arguments);
+        }, verb);
 
         return deferred;
     };
