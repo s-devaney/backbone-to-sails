@@ -46,7 +46,7 @@
         if (socket) return;
 
         if (Backbone.socket) {
-            socket = Backbone.socket;
+            socket = Backbone.socket.socket;
             socketSrc = '`Backbone.socket`';
         }
         else if (window.socket) {
@@ -74,7 +74,7 @@
 
             // Run the request queue
             _.each(requestQueue, function (request) {
-                Backbone.sync(request.method, request.model, request.options);
+                Backbone.makeSailsRequest.apply(this, request);
             });
         }
         else {
@@ -148,47 +148,10 @@
      *
      * @name sync
      */
-    Backbone.sync = function (method, model, options) {
+    Backbone.sync = function (method, model, options, queuedPromise) {
 
         // Clone options to avoid smashing anything unexpected
         options = _.extend({}, options);
-
-
-        // If socket is not defined yet, try to grab it again.
-        _acquireSocket();
-
-
-        // Handle missing socket
-        if (!socket) {
-            throw new Error(
-                    '\n' +
-                    'Backbone cannot find a suitable `socket` object.\n' +
-                    'This SDK expects the active socket to be located at `window.socket`, ' +
-                    '`Backbone.socket` or the `socket` property\n' +
-                    'of the Backbone model or collection attempting to communicate w/ the server.\n'
-            );
-        }
-
-
-        // Ensures the socket is connected and able to communicate w/ the server.
-        //
-        var socketIsConnected = socket.socket && socket.socket.connected;
-        if (!socketIsConnected) {
-
-            // If the socket is not connected, the request is queued
-            // (so it can be replayed when the socket comes online.)
-            requestQueue.push({
-                method:  method,
-                model:   model,
-                options: options
-            });
-
-
-            // If we haven't already, start polling the socket to see if it's ready
-            _keepTryingToRunRequestQueue();
-
-            return;
-        }
 
 
         // Get the actual URL (call `.url()` if it's a function)
@@ -236,7 +199,7 @@
                 verb = method;
         }
 
-        promise = this.makeSailsRequest(url, verb, params);
+        var promise = Backbone.makeSailsRequest(url, verb, params, queuedPromise);
         model.trigger('request', model, promise, options);
 
         return promise;
@@ -252,17 +215,54 @@
      * @param {{}=} data
      * @returns {$.Deferred}
      */
-    Backbone.makeSailsRequest = function (url, verb, data) {
-        // Send a simulated HTTP request to Sails via Socket.io
-        var deferred = new $.Deferred();
+    Backbone.makeSailsRequest = function (url, verb, data, promise) {
 
-        socket.request(url, data || {}, function serverResponded(body, response) {
-            var isSuccess = response.statusCode >= 200 && response.statusCode < 300 || response.statusCode === 304;
+        // If a promise hasn't already been made, create one!
+        promise = promise || new $.Deferred();
+        data = data || {};
 
-            deferred[isSuccess ? 'rejectWith' : 'resolveWith'](this, arguments);
+
+        // If socket is not defined yet, try to grab it again.
+        _acquireSocket();
+
+
+        // Handle missing socket
+        if (!socket) {
+            throw new Error(
+                '\n' +
+                    'Backbone cannot find a suitable `socket` object.\n' +
+                    'This SDK expects the active socket to be located at `window.socket`, ' +
+                    '`Backbone.socket` or the `socket` property\n' +
+                    'of the Backbone model or collection attempting to communicate w/ the server.\n'
+            );
+        }
+
+
+        // Ensures the socket is connected and able to communicate w/ the server.
+        //
+        var socketIsConnected = socket.socket && socket.socket.connected;
+        if (!socketIsConnected) {
+
+            [].push.call(arguments, promise);
+
+            // If the socket is not connected, the request is queued
+            // (so it can be replayed when the socket comes online.)
+            requestQueue.push(arguments);
+
+
+            // If we haven't already, start polling the socket to see if it's ready
+            _keepTryingToRunRequestQueue();
+
+            return promise;
+        }
+
+        socket.request(url, data, function serverResponded(body, jwr) {
+            var isSuccess = jwr.statusCode >= 200 && jwr.statusCode < 300 || jwr.statusCode === 304;
+
+            promise[isSuccess ? 'resolveWith' : 'rejectWith'](this, arguments);
         }, verb);
 
-        return deferred;
+        return promise;
     };
 
 })();
