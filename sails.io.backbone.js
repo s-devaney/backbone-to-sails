@@ -148,7 +148,7 @@
      *
      * @name sync
      */
-    Backbone.sync = function (method, model, options, queuedPromise) {
+    Backbone.sync = function (method, model, options) {
 
         // Clone options to avoid smashing anything unexpected
         options = _.extend({}, options);
@@ -199,7 +199,12 @@
                 verb = method;
         }
 
-        var promise = Backbone.makeSailsRequest(url, verb, params, queuedPromise);
+        var promise = Backbone.makeSailsRequest(url, verb, params);
+
+        promise.done(  options.success  || function () {});
+        promise.fail(  options.error    || function () {});
+        promise.always(options.complete || function () {});
+
         model.trigger('request', model, promise, options);
 
         return promise;
