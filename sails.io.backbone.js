@@ -202,12 +202,32 @@
         var promise = Backbone.makeSailsRequest(url, verb, params);
 
         promise.done(  options.success  || function () {});
-        promise.fail(  options.error    || function () {});
+        promise.fail(  Backbone.handleSailsError(model, options.error));
         promise.always(options.complete || function () {});
 
         model.trigger('request', model, promise, options);
 
         return promise;
+    };
+
+    /**
+     * #Backbone.handleSailsError
+     *
+     * Handles responses from sails REST APIs, triggering model's invalid event when appropriate.
+     *
+     * @param {Backbone.Model} model
+     * @param {Function} defaultHandler
+     * @returns {Function}
+     */
+    Backbone.handleSailsError = function (model, defaultHandler) {
+
+        return function (body, response) {
+            if (typeof body === 'object' && body.error === 'E_VALIDATION') {
+                model.trigger('invalid', body.invalidAttributes, response);
+            } else {
+                defaultHandler.call(model, arguments);
+            }
+        }
     };
 
     /**
