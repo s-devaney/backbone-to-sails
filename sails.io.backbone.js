@@ -223,7 +223,7 @@
 
         return function (body, response) {
             if (typeof body === 'object' && body.error === 'E_VALIDATION') {
-                model.trigger('invalid', body.invalidAttributes, response);
+                model.trigger('invalid', model, body.invalidAttributes, response);
             } else {
                 defaultHandler.call(model, arguments);
             }
