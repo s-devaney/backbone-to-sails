@@ -43,19 +43,18 @@
      * @api private
      */
     var _acquireSocket = function () {
-        if (socket) return;
+        var oldSocket = socket;
 
         if (Backbone.socket) {
             socket = Backbone.socket.socket;
             socketSrc = '`Backbone.socket`';
-        }
-        else if (window.socket) {
+        } else if (window.socket) {
             socket = window.socket;
             socketSrc = '`window.socket`';
         }
 
         // The first time a socket is acquired, bind comet listener
-        if (socket) _bindCometListener();
+        if (_socketReady() && oldSocket !== socket) _bindCometListener();
     };
 
 
@@ -66,11 +65,9 @@
     var _keepTryingToRunRequestQueue = function () {
         clearTimeout(socketTimer);
 
-        // Check if socket is connected (synchronous)
-        var socketIsConnected = socket.socket && socket.socket.connected;
+        _acquireSocket();
 
-
-        if (socketIsConnected) {
+        if (_socketReady()) {
 
             // Run the request queue
             _.each(requestQueue, function (request) {
@@ -96,6 +93,13 @@
             // 	'before using sync methods on your Backbone models and collections.'
             // );
         }
+    };
+
+    /**
+     * Returns whether the socket is connected.
+     */
+    var _socketReady = function () {
+        return socket && socket.socket && socket.socket.connected;
     };
 
 
@@ -250,23 +254,8 @@
         // If socket is not defined yet, try to grab it again.
         _acquireSocket();
 
-
-        // Handle missing socket
-        if (!socket) {
-            throw new Error(
-                '\n' +
-                    'Backbone cannot find a suitable `socket` object.\n' +
-                    'This SDK expects the active socket to be located at `window.socket`, ' +
-                    '`Backbone.socket` or the `socket` property\n' +
-                    'of the Backbone model or collection attempting to communicate w/ the server.\n'
-            );
-        }
-
-
         // Ensures the socket is connected and able to communicate w/ the server.
-        //
-        var socketIsConnected = socket.socket && socket.socket.connected;
-        if (!socketIsConnected) {
+        if (!_socketReady()) {
 
             [].push.call(arguments, promise);
 
