@@ -257,11 +257,9 @@
         // Ensures the socket is connected and able to communicate w/ the server.
         if (!_socketReady()) {
 
-            [].push.call(arguments, promise);
-
             // If the socket is not connected, the request is queued
             // (so it can be replayed when the socket comes online.)
-            requestQueue.push(arguments);
+            requestQueue.push([url, verb, data, promise]);
 
 
             // If we haven't already, start polling the socket to see if it's ready
