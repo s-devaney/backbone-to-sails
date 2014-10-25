@@ -236,7 +236,7 @@
      */
     Backbone.sails.processError = function (body, jwr) {
         Backbone.sails.trigger('error', body, jwr);
-        Backbone.sails.trigger('error ' + jwr.statusCode, body, jwr);
+        Backbone.sails.trigger('errorCode' + jwr.statusCode, body, jwr);
     };
 
     /**
