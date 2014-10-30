@@ -212,8 +212,7 @@
         promise.fail(function (body, response) {
             if (typeof body === 'object' && body.error === 'E_VALIDATION') {
                 model.trigger('invalid', model, body.invalidAttributes, response);
-            }
-            if (options.error) {
+            } else if (options.error) {
                 options.error(body, response);
             }
         });
