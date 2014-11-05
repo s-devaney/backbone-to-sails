@@ -245,15 +245,18 @@
      *
      * @param {string} url
      * @param {string} verb
-     * @param {{}=} data
+     * @param {object=} data
+     * @param {object} options
      * @returns {$.Deferred}
      */
-    Backbone.sails.request = function (url, verb, data, promise) {
+    Backbone.sails.request = function (url, verb, data, options) {
+
+        options = options || {};
 
         // If a promise hasn't already been made, create one. If we're getting
         // input from Backbone.sync or we're retrying a queued connection,
         // this will already have been made and given to the requester.
-        promise = promise || new $.Deferred();
+        options.promise = options.promise || new $.Deferred();
 
 
         // If socket is not defined yet, try to grab it again.
@@ -264,26 +267,28 @@
 
             // If the socket is not connected, the request is queued
             // (so it can be replayed when the socket comes online.)
-            requestQueue.push([url, verb, data, promise]);
+            requestQueue.push([url, verb, data, options]);
 
             // If we haven't already, start polling the socket to see if it's ready
             _keepTryingToRunRequestQueue();
 
-            return promise;
+            return options.promise;
         }
 
         // We're ready to make a socket request! Default the data and bind
         // our error listener.
-        promise.fail(Backbone.sails.processError);
+        if (options.processError !== false) {
+            options.promise.fail(Backbone.sails.processError);
+        }
         data = data || {};
 
         socket.request(url, data, function serverResponded(body, jwr) {
             var isSuccess = jwr.statusCode >= 200 && jwr.statusCode < 300 || jwr.statusCode === 304;
 
-            promise[isSuccess ? 'resolveWith' : 'rejectWith'](this, arguments);
+            options.promise[isSuccess ? 'resolveWith' : 'rejectWith'](this, arguments);
         }, verb);
 
-        return promise;
+        return options.promise;
     };
 
 })();
