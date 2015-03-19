@@ -12,15 +12,12 @@
  * MIT Licensed
  */
 
-(function () {
+module.exports = function (Backbone, socket) {
 
 
-    // The active `socket`
-    var socket;
-
-
-    // Also keep track of where it came from
-    var socketSrc;
+    socket.on('message', function cometMessageReceived(message) {
+        Backbone.trigger('comet', message);
+    });
 
 
     // Used to simplify app-level connection logic-- i.e. so you don't
@@ -35,39 +32,13 @@
 
 
     /**
-     * _acquireSocket()
-     *
-     * Grab hold of our active socket object, set it on `socket` closure variable above.
-     * (if your connected socket exists on a non-standard variable, change here)
-     *
-     * @api private
-     */
-    var _acquireSocket = function () {
-        var oldSocket = socket;
-
-        if (Backbone.socket) {
-            socket = Backbone.socket.socket;
-            socketSrc = '`Backbone.socket`';
-        } else if (window.socket) {
-            socket = window.socket;
-            socketSrc = '`window.socket`';
-        }
-
-        // The first time a socket is acquired, bind comet listener
-        if (_socketReady() && oldSocket !== socket) _bindCometListener();
-    };
-
-
-    /**
      * Checks if the socket is ready- if so, runs the request queue.
      * If not, sets the timer again.
      */
     var _keepTryingToRunRequestQueue = function () {
         clearTimeout(socketTimer);
 
-        _acquireSocket();
-
-        if (_socketReady()) {
+        if (socket.isConnected()) {
 
             // Run the request queue
             _.each(requestQueue, function (request) {
@@ -94,52 +65,6 @@
             // );
         }
     };
-
-    /**
-     * Returns whether the socket is connected.
-     */
-    var _socketReady = function () {
-        return socket && socket.socket && socket.socket.connected;
-    };
-
-
-    // Set up `async.until`-esque mechanism which will attempt to acquire a socket.
-    var attempts = 0,
-        maxAttempts = 3,
-        interval = 1500,
-        initialInterval = 250;
-
-
-    var _attemptToAcquireSocket = function () {
-        if (socket) return;
-        attempts++;
-        _acquireSocket();
-        if (attempts >= maxAttempts) return;
-        setTimeout(_attemptToAcquireSocket, interval);
-    };
-
-
-    // Attempt to acquire the socket more quickly the first time,
-    // in case the user is on a fast connection and it's available.
-    setTimeout(_attemptToAcquireSocket, initialInterval);
-
-
-    /**
-     * Backbone.on('comet', ...)
-     *
-     * Since Backbone is already a listener (extends Backbone.Events)
-     * all we have to do is trigger the event on the Backbone global when
-     * we receive a new message from the server.
-     *
-     * I realize this doesn't do a whole lot right now-- that's ok.
-     * Let's start light and layer on additional functionality carefully.
-     */
-    var _bindCometListener = function socketAcquiredForFirstTime() {
-        socket.on('message', function cometMessageReceived(message) {
-            Backbone.trigger('comet', message);
-        });
-    };
-
 
     /**
      * # Backbone.sync
@@ -258,12 +183,8 @@
         // this will already have been made and given to the requester.
         options.promise = options.promise || new $.Deferred();
 
-
-        // If socket is not defined yet, try to grab it again.
-        _acquireSocket();
-
         // Ensures the socket is connected and able to communicate w/ the server.
-        if (!_socketReady()) {
+        if (!socket.isConnected()) {
 
             // If the socket is not connected, the request is queued
             // (so it can be replayed when the socket comes online.)
@@ -280,15 +201,25 @@
         if (options.processError !== false) {
             options.promise.fail(Backbone.sails.processError);
         }
+
         data = data || {};
 
-        socket.request(url, data, function serverResponded(body, jwr) {
+        // Make sure GET data is put in the query string.
+        if (verb.toUpperCase() === 'GET') {
+            url += (url.indexOf('?') === -1 ? '?' : '&') + $.param(data);
+            data = {};
+        }
+
+        socket.request({
+            url: url,
+            params: data,
+            method: verb
+        }, function serverResponded(body, jwr) {
             var isSuccess = jwr.statusCode >= 200 && jwr.statusCode < 300 || jwr.statusCode === 304;
 
             options.promise[isSuccess ? 'resolveWith' : 'rejectWith'](this, arguments);
-        }, verb);
+        });
 
         return options.promise;
     };
-
-})();
+};
