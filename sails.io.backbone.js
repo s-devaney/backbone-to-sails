@@ -203,6 +203,7 @@ module.exports = function (Backbone, socket) {
         }
 
         data = data || {};
+        verb = verb || 'GET';
 
         // Make sure GET data is put in the query string.
         if (verb.toUpperCase() === 'GET') {
