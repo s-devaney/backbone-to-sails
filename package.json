@@ -1,0 +1,23 @@
+{
+  "name": "backbone-to-sails",
+  "version": "0.0.0",
+  "description": "Backbone SDK for communicating with Sails.js over Socket.io.",
+  "main": "sails.io.backbone.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MCProHosting/backbone-to-sails.git"
+  },
+  "keywords": [
+    "backbone",
+    "sails",
+    "socket.io",
+    "sails.js",
+    "sailsjs"
+  ],
+  "author": "Connor Peet <connor@peet.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MCProHosting/backbone-to-sails/issues"
+  },
+  "homepage": "https://github.com/MCProHosting/backbone-to-sails"
+}
