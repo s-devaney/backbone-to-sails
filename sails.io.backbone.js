@@ -12,10 +12,18 @@
  * MIT Licensed
  */
 
-module.exports = function (Backbone, socket) {
-
-
-    socket.on('message', function cometMessageReceived(message) {
+(function(root, factory) {
+	if(typeof define === 'function' && define.amd) {
+		define(['backbone'], function(Backbone) {
+			factory(root, Backbone);
+		});
+	} else if(typeof exports !== 'undefined') {
+		factory(root, require('backbone'));
+	} else {
+		factory(root, root.Backbone);
+	}
+}(this, function(root, Backbone) {
+	socket.on('message', function cometMessageReceived(message) {
         Backbone.trigger('comet', message);
     });
 
@@ -223,4 +231,10 @@ module.exports = function (Backbone, socket) {
 
         return options.promise;
     };
+}));
+
+module.exports = function (Backbone, socket) {
+
+
+    
 };
