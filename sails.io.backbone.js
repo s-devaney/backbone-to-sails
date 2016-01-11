@@ -23,7 +23,7 @@
 		factory(root, root.Backbone);
 	}
 }(this, function(root, Backbone) {
-	socket.on('message', function cometMessageReceived(message) {
+	io.socket.on('message', function cometMessageReceived(message) {
         Backbone.trigger('comet', message);
     });
 
@@ -46,7 +46,7 @@
     var _keepTryingToRunRequestQueue = function () {
         clearTimeout(socketTimer);
 
-        if (socket.isConnected()) {
+        if (io.socket.isConnected()) {
 
             // Run the request queue
             _.each(requestQueue, function (request) {
@@ -192,7 +192,7 @@
         options.promise = options.promise || new $.Deferred();
 
         // Ensures the socket is connected and able to communicate w/ the server.
-        if (!socket.isConnected()) {
+        if (!io.socket.isConnected()) {
 
             // If the socket is not connected, the request is queued
             // (so it can be replayed when the socket comes online.)
@@ -219,7 +219,7 @@
             data = {};
         }
 
-        socket.request({
+        io.socket.request({
             url: url,
             params: data,
             method: verb
@@ -232,9 +232,3 @@
         return options.promise;
     };
 }));
-
-module.exports = function (Backbone, socket) {
-
-
-    
-};
