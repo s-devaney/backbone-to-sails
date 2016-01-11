@@ -14,7 +14,7 @@
 
 (function(root, factory) {
 	if(typeof define === 'function' && define.amd) {
-		define(['backbone', 'sails_config'], function(Backbone, io) {
+		define(['backbone', 'socket_config'], function(Backbone, io) {
 			factory(root, Backbone, io);
 		});
 	} else if(typeof exports !== 'undefined') {
