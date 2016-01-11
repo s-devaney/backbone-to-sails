@@ -1,0 +1,16 @@
+{
+  "name": "backbone-to-sails",
+  "version": "0.10.0",
+  "homepage": "https://github.com/s-devaney/backbone-to-sails",
+  "authors": [
+    "Sam Devaney <sam@devaney.me.uk>"
+  ],
+  "description": "",
+  "main": "sails.io.backbone",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "license": "MIT"
+}
