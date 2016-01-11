@@ -14,15 +14,15 @@
 
 (function(root, factory) {
 	if(typeof define === 'function' && define.amd) {
-		define(['backbone'], function(Backbone) {
-			factory(root, Backbone);
+		define(['backbone', 'sails_config'], function(Backbone, io) {
+			factory(root, Backbone, io);
 		});
 	} else if(typeof exports !== 'undefined') {
 		factory(root, require('backbone'));
 	} else {
 		factory(root, root.Backbone);
 	}
-}(this, function(root, Backbone) {
+}(this, function(root, Backbone, io) {
 	io.socket.on('message', function cometMessageReceived(message) {
         Backbone.trigger('comet', message);
     });
