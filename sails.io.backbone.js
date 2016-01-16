@@ -23,8 +23,6 @@
 		factory(root, root.Backbone);
 	}
 }(this, function(root, Backbone, io) {
-    console.log(io);
-
 	io.socket.on('message', function cometMessageReceived(message) {
         Backbone.trigger('comet', message);
     });
