@@ -18,13 +18,13 @@
 			factory(root, Backbone, io);
 		});
 	} else if(typeof exports !== 'undefined') {
-		factory(root, require('backbone'));
+		factory(root, require('backbone'), io);
 	} else {
-		factory(root, root.Backbone);
+		factory(root, root.Backbone, io);
 	}
 }(this, function(root, Backbone, io) {
-	io.socket.on('message', function cometMessageReceived(message) {
-        Backbone.trigger('comet', message);
+    io.socket.on('message', function cometMessageReceived(message) {
+	Backbone.trigger('comet', message);
     });
 
 
