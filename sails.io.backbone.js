@@ -136,6 +136,11 @@
                 verb = method;
         }
 
+        // Build request options. By default add and `headers` property
+        var opts = {
+          headers: options.headers || {}
+        };
+
         var promise = Backbone.sails.request(url, verb, params);
 
         promise.done(options.success    || function () {});
@@ -222,7 +227,8 @@
         io.socket.request({
             url: url,
             params: data,
-            method: verb
+            method: verb,
+            headers: options.headers
         }, function serverResponded(body, jwr) {
             var isSuccess = jwr.statusCode >= 200 && jwr.statusCode < 300 || jwr.statusCode === 304;
 
