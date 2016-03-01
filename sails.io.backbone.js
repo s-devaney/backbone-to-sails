@@ -116,7 +116,7 @@
         }
 
         if (_.isObject(options.data)) {
-            _(params).extend(options.data);
+            _.extend(params, options.data);
         }
 
 
