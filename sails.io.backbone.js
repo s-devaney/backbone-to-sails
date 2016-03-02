@@ -141,7 +141,7 @@
           headers: options.headers || {}
         };
 
-        var promise = Backbone.sails.request(url, verb, params);
+        var promise = Backbone.sails.request(url, verb, params, opts);
 
         promise.done(options.success    || function () {});
         promise.always(options.complete || function () {});
